@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Neon Currency Calculator</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at top, #0a0f1f, #000000);
+            font-family: Arial, sans-serif;
+            color: #fff;
+        }
+
+        .card {
+            background: rgba(10, 20, 40, 0.95);
+            width: 420px;
+            padding: 25px;
+            border-radius: 14px;
+            box-shadow: 0 0 25px rgba(0, 200, 255, 0.4);
+            border: 1px solid rgba(0, 200, 255, 0.3);
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 6px 0 12px;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            background: #0e1628;
+            color: #d6e2ff;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            color: #fff;
+            font-weight: bold;
+            background: linear-gradient(90deg, #1976ff, #9a25ff);
+            box-shadow: 0 0 10px rgba(25, 118, 255, 0.7);
+        }
+
+        #resultBox {
+            margin-top: 20px;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            font-size: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+        <h2>💱 Neon Currency Calculator</h2>
+
+        <label>Amount</label>
+        <input type="number" id="amount" value="1000">
+
+        <label>From Currency</label>
+        <select id="fromCurrency"></select>
+
+        <label>To Currency</label>
+        <select id="toCurrency"></select>
+
+        <button onclick="convert()">Convert</button>
+
+        <div id="resultBox"></div>
+    </div>
+
+    <script>
+        async function loadCurrencies() {
+            const resp = await fetch("/api/currencies")
+            const data = await resp.json()
+
+            let fromSel = document.getElementById("fromCurrency")
+            let toSel = document.getElementById("toCurrency")
+
+            fromSel.innerHTML = ""
+            toSel.innerHTML = ""
+
+            data.currencies.forEach(curr => {
+                fromSel.innerHTML += `<option value="${curr}">${curr}</option>`
+                toSel.innerHTML += `<option value="${curr}">${curr}</option>`
+            })
+        }
+
+        async function convert() {
+            let amount = document.getElementById("amount").value
+            let fromC = document.getElementById("fromCurrency").value
+            let toC = document.getElementById("toCurrency").value
+
+            const resp = await fetch("/api/convert", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    from_currency: fromC,
+                    to_currency: toC,
+                    amount: parseFloat(amount)
+                })
+            })
+
+            const data = await resp.json()
+
+            document.getElementById("resultBox").innerHTML = `
+                <b>${data.amount} ${data.from_currency} = ${data.converted_amount} ${data.to_currency}</b><br><br>
+                Rate:<br>
+                1 ${data.from_currency} = ${data.rate} ${data.to_currency}
+            `
+        }
+
+        loadCurrencies()
+    </script>
+
+</body>
+</html>
+
